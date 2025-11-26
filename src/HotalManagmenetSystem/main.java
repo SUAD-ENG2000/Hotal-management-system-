@@ -1,4 +1,4 @@
-package hotal_managmenet_system;
+package HotalManagmenetSystem;
 
 public class main {
 
