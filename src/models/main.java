@@ -1,4 +1,4 @@
-package HotalManagmenetSystem;
+package models;
 
 public class main {
 
