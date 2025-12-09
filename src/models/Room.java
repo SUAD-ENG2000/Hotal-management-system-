@@ -1,5 +1,9 @@
+// Room.java
 package models;
 
+/**
+ * Represents a hotel room.
+ */
 public class Room {
     private String roomNumber;
     private String roomType;
