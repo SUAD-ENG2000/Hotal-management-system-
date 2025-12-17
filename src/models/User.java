@@ -1,4 +1,3 @@
-// User.java (abstract base class)
 package models;
 
 /**
@@ -19,6 +18,16 @@ public abstract class User {
     public String getPassword() { return password; }
     public String getRole() { return role; }
 
+    // Setters
+    public void setUserId(String userId) { this.userId = userId; }
+    public void setPassword(String password) { this.password = password; }
+    public void setRole(String role) { this.role = role; }
+
     // Abstract method to be implemented by subclasses
     public abstract void showMenu();
+    
+    @Override
+    public String toString() {
+        return "User{userId='" + userId + "', role='" + role + "'}";
+    }
 }
