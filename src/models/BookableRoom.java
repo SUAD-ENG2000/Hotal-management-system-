@@ -1,4 +1,3 @@
-// BookableRoom.java
 package models;
 
 /**
@@ -22,5 +21,10 @@ public class BookableRoom extends Room implements IBookable {
     @Override
     public void markAsAvailable() {
         setAvailable(true);
+    }
+    
+    @Override
+    public String toString() {
+        return "Bookable" + super.toString();
     }
 }
