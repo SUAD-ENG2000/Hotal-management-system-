@@ -29,9 +29,17 @@ public class Bill {
 
     // Getters and Setters
     public String getBillId() { return billId; }
+    public void setBillId(String billId) { this.billId = billId; }
+    
     public String getBookingId() { return bookingId; }
+    public void setBookingId(String bookingId) { this.bookingId = bookingId; }
+    
     public double getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
+    
     public LocalDateTime getGeneratedDate() { return generatedDate; }
+    public void setGeneratedDate(LocalDateTime generatedDate) { this.generatedDate = generatedDate; }
+    
     public boolean isPaid() { return isPaid; }
     public void setPaid(boolean paid) { isPaid = paid; }
     
@@ -41,7 +49,7 @@ public class Bill {
      */
     @Override
     public String toString() {
-        return String.format("Bill[ID: %s, Booking: %s, Amount: $%.2f, Paid: %s]",
-            billId, bookingId, totalAmount, isPaid ? "Yes" : "No");
+        return String.format("Bill[ID: %s, Booking: %s, Amount: $%.2f, Generated: %s, Paid: %s]",
+            billId, bookingId, totalAmount, generatedDate, isPaid ? "Yes" : "No");
     }
 }
