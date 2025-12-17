@@ -1,6 +1,8 @@
 package models;
 
-import database.DatabaseManager;
+import service.RoomService;
+import service.BookingService;
+import service.BillService;
 import exceptions.HotelManagementException;
 import java.util.List;
 import java.util.Scanner;
@@ -12,6 +14,9 @@ import java.util.Scanner;
 public class Manager extends User {
     // Scanner for reading user input specific to Manager operations
     private Scanner scanner;
+    private RoomService roomService;
+    private BookingService bookingService;
+    private BillService billService;
 
     /**
      * Creates a new Manager user.
@@ -21,6 +26,9 @@ public class Manager extends User {
     public Manager(String userId, String password) {
         super(userId, "Manager");
         this.scanner = new Scanner(System.in);
+        this.roomService = new RoomService();
+        this.bookingService = new BookingService();
+        this.billService = new BillService();
     }
 
     /**
@@ -51,8 +59,8 @@ public class Manager extends User {
         // Create room object with provided details
         Room room = new Room(roomNumber, roomType, price, true);
         
-        // Persist to database
-        DatabaseManager.addRoom(room);
+        // Persist to database using service
+        roomService.addRoom(room);
         System.out.println("✅ Room added successfully!");
     }
 
@@ -71,8 +79,8 @@ public class Manager extends User {
         String confirm = scanner.nextLine();
         
         if (confirm.equalsIgnoreCase("yes")) {
-            // Delete from database
-            DatabaseManager.removeRoom(roomNumber);
+            // Delete from database using service
+            roomService.removeRoom(roomNumber);
             System.out.println("✅ Room removed successfully!");
         } else {
             System.out.println("Room deletion cancelled.");
@@ -85,8 +93,8 @@ public class Manager extends User {
      * @throws HotelManagementException if rooms cannot be retrieved
      */
     public void viewAllRooms() throws HotelManagementException {
-        // Fetch all rooms from database
-        List<Room> rooms = DatabaseManager.getAllRooms();
+        // Fetch all rooms from service
+        List<Room> rooms = roomService.getAllRooms();
         
         // Display header
         System.out.println("\n=== All Rooms (" + rooms.size() + " rooms) ===");
@@ -112,8 +120,8 @@ public class Manager extends User {
      * @throws HotelManagementException if bookings cannot be retrieved
      */
     public void viewAllBookings() throws HotelManagementException {
-        // Fetch all bookings from database
-        List<Booking> bookings = DatabaseManager.getAllBookings();
+        // Fetch all bookings from service
+        List<Booking> bookings = bookingService.getAllBookings();
         
         // Display header with count
         System.out.println("\n=== All Bookings (" + bookings.size() + " bookings) ===");
@@ -137,8 +145,8 @@ public class Manager extends User {
      * @throws HotelManagementException if bills cannot be retrieved
      */
     public void viewAllBills() throws HotelManagementException {
-        // Fetch all bills from database
-        List<Bill> bills = DatabaseManager.getAllBills();
+        // Fetch all bills from service
+        List<Bill> bills = billService.getAllBills();
         
         // Display header with count
         System.out.println("\n=== All Bills (" + bills.size() + " bills) ===");
@@ -152,5 +160,26 @@ public class Manager extends User {
             System.out.println("Generated: " + bill.getGeneratedDate());
             System.out.println("Status: " + (bill.isPaid() ? "✅ Paid" : "❌ Unpaid"));
         }
+    }
+    
+    /**
+     * Gets the room service for external access
+     */
+    public RoomService getRoomService() {
+        return roomService;
+    }
+    
+    /**
+     * Gets the booking service for external access
+     */
+    public BookingService getBookingService() {
+        return bookingService;
+    }
+    
+    /**
+     * Gets the bill service for external access
+     */
+    public BillService getBillService() {
+        return billService;
     }
 }
