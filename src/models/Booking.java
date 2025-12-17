@@ -23,7 +23,7 @@ public class Booking {
     // Scheduled departure date (when guest checks out)
     private LocalDate checkOutDate;
     
-    // Indicates if booking is currently active (not cancelled or completed)
+    // Indicates if booking is currently active (not cancelled )
     private boolean isActive;
 
     /**
@@ -87,7 +87,7 @@ public class Booking {
     
     @Override
     public String toString() {
-        return String.format("Booking[ID: %s, Customer: %s, Room: %s, Check-in: %s, Check-out: %s, Nights: %d]",
-            bookingId, customerName, roomNumber, checkInDate, checkOutDate, calculateNights());
+        return String.format("Booking[ID: %s, Customer: %s, Room: %s, Check-in: %s, Check-out: %s, Nights: %d, Active: %s]",
+            bookingId, customerName, roomNumber, checkInDate, checkOutDate, calculateNights(), isActive ? "Yes" : "No");
     }
 }
