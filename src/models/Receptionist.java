@@ -1,6 +1,8 @@
 package models;
 
-import database.DatabaseManager;
+import service.RoomService;
+import service.BookingService;
+import service.BillService;
 import exceptions.HotelManagementException;
 import java.time.LocalDate;
 import java.util.List;
@@ -13,6 +15,9 @@ import java.util.Scanner;
 public class Receptionist extends User {
     // Scanner for reading user input specific to Receptionist operations
     private Scanner scanner;
+    private RoomService roomService;
+    private BookingService bookingService;
+    private BillService billService;
 
     /**
      * Creates a new Receptionist user.
@@ -22,6 +27,9 @@ public class Receptionist extends User {
     public Receptionist(String userId, String password) {
         super(userId, "Receptionist");
         this.scanner = new Scanner(System.in);
+        this.roomService = new RoomService();
+        this.bookingService = new BookingService();
+        this.billService = new BillService();
     }
 
     /**
@@ -38,8 +46,8 @@ public class Receptionist extends User {
      * @throws HotelManagementException if rooms cannot be retrieved
      */
     public void viewAllRooms() throws HotelManagementException {
-        // Fetch all rooms from database
-        List<Room> rooms = DatabaseManager.getAllRooms();
+        // Fetch all rooms from service
+        List<Room> rooms = roomService.getAllRooms();
         
         // Display formatted table
         System.out.println("\n=== All Rooms (" + rooms.size() + " rooms) ===");
@@ -67,8 +75,8 @@ public class Receptionist extends User {
         System.out.print("Enter room type (Single/Double/Suite/Deluxe): ");
         String roomType = scanner.nextLine();
         
-        // Query database for first available room of specified type
-        Room room = DatabaseManager.findAvailableRoom(roomType);
+        // Query service for first available room of specified type
+        Room room = roomService.findAvailableRoom(roomType);
         
         if (room != null) {
             System.out.println("\n✅ Available room found!");
@@ -90,12 +98,10 @@ public class Receptionist extends User {
         
         // Display available rooms to assist user
         System.out.println("\nAvailable rooms:");
-        List<Room> rooms = DatabaseManager.getAllRooms();
+        List<Room> rooms = roomService.getAvailableRooms();
         for (Room room : rooms) {
-            if (room.isAvailable()) {
-                System.out.println("- " + room.getRoomNumber() + " (" + room.getRoomType() + 
-                                 ") - $" + room.getPricePerNight() + "/night");
-            }
+            System.out.println("- " + room.getRoomNumber() + " (" + room.getRoomType() + 
+                             ") - $" + room.getPricePerNight() + "/night");
         }
         
         // Collect guest information
@@ -128,8 +134,8 @@ public class Receptionist extends User {
         String bookingId = "BOOK_" + System.currentTimeMillis();
         Booking booking = new Booking(bookingId, customerName, roomNumber, checkIn, checkOut);
         
-        // Persist booking and update room status
-        DatabaseManager.createBooking(booking);
+        // Persist booking using service
+        bookingService.createBooking(booking);
         
         // Display confirmation
         System.out.println("\n✅ Booking created successfully!");
@@ -151,19 +157,17 @@ public class Receptionist extends User {
         
         // List active bookings to help user
         System.out.println("\nActive bookings:");
-        List<Booking> bookings = DatabaseManager.getAllBookings();
+        List<Booking> bookings = bookingService.getActiveBookings();
         boolean hasActiveBookings = false;
         
         for (Booking booking : bookings) {
-            if (booking.isActive()) {
-                hasActiveBookings = true;
-                System.out.println("- Booking ID: " + booking.getBookingId());
-                System.out.println("  Customer: " + booking.getCustomerName());
-                System.out.println("  Room: " + booking.getRoomNumber());
-                System.out.println("  Check-in: " + booking.getCheckInDate());
-                System.out.println("  Check-out: " + booking.getCheckOutDate());
-                System.out.println("  Nights: " + booking.calculateNights());
-            }
+            hasActiveBookings = true;
+            System.out.println("- Booking ID: " + booking.getBookingId());
+            System.out.println("  Customer: " + booking.getCustomerName());
+            System.out.println("  Room: " + booking.getRoomNumber());
+            System.out.println("  Check-in: " + booking.getCheckInDate());
+            System.out.println("  Check-out: " + booking.getCheckOutDate());
+            System.out.println("  Nights: " + booking.calculateNights());
         }
         
         if (!hasActiveBookings) {
@@ -178,7 +182,7 @@ public class Receptionist extends User {
         // Find the specific booking
         Booking bookingToBill = null;
         for (Booking booking : bookings) {
-            if (booking.getBookingId().equals(bookingId) && booking.isActive()) {
+            if (booking.getBookingId().equals(bookingId)) {
                 bookingToBill = booking;
                 break;
             }
@@ -189,19 +193,8 @@ public class Receptionist extends User {
             return;
         }
         
-        // Check for duplicate bills
-        List<Bill> existingBills = DatabaseManager.getAllBills();
-        for (Bill bill : existingBills) {
-            if (bill.getBookingId().equals(bookingId)) {
-                System.out.println("❌ A bill already exists for this booking!");
-                System.out.println("Bill ID: " + bill.getBillId());
-                System.out.println("Status: " + (bill.isPaid() ? "Paid" : "Unpaid"));
-                return;
-            }
-        }
-        
-        // Generate and save the bill
-        Bill bill = DatabaseManager.generateBill(bookingToBill);
+        // Generate and save the bill using service
+        Bill bill = billService.generateBill(bookingToBill);
         
         // Display bill details
         System.out.println("\n✅ Bill generated successfully!");
@@ -223,17 +216,15 @@ public class Receptionist extends User {
         
         // List unpaid bills
         System.out.println("\nUnpaid bills:");
-        List<Bill> bills = DatabaseManager.getAllBills();
+        List<Bill> bills = billService.getUnpaidBills();
         boolean hasUnpaidBills = false;
         
         for (Bill bill : bills) {
-            if (!bill.isPaid()) {
-                hasUnpaidBills = true;
-                System.out.println("- Bill ID: " + bill.getBillId());
-                System.out.println("  Booking ID: " + bill.getBookingId());
-                System.out.println("  Amount: $" + bill.getTotalAmount());
-                System.out.println("  Generated: " + bill.getGeneratedDate());
-            }
+            hasUnpaidBills = true;
+            System.out.println("- Bill ID: " + bill.getBillId());
+            System.out.println("  Booking ID: " + bill.getBookingId());
+            System.out.println("  Amount: $" + bill.getTotalAmount());
+            System.out.println("  Generated: " + bill.getGeneratedDate());
         }
         
         if (!hasUnpaidBills) {
@@ -248,14 +239,10 @@ public class Receptionist extends User {
         // Find and update the bill
         boolean found = false;
         for (Bill bill : bills) {
-            if (bill.getBillId().equals(billId) && !bill.isPaid()) {
-                // Update bill status in database
-                DatabaseManager.updateBillStatus(billId, true);
+            if (bill.getBillId().equals(billId)) {
+                // Update bill status using service
+                billService.markBillAsPaid(billId);
                 System.out.println("✅ Bill marked as paid successfully!");
-                found = true;
-                break;
-            } else if (bill.getBillId().equals(billId) && bill.isPaid()) {
-                System.out.println("❌ This bill is already paid!");
                 found = true;
                 break;
             }
@@ -274,30 +261,28 @@ public class Receptionist extends User {
     public void viewUnpaidBills() throws HotelManagementException {
         System.out.println("\n=== Unpaid Bills ===");
         
-        List<Bill> bills = DatabaseManager.getAllBills();
+        List<Bill> bills = billService.getUnpaidBills();
         int unpaidCount = 0;
         double totalUnpaid = 0;
         
         // Process each bill
         for (Bill bill : bills) {
-            if (!bill.isPaid()) {
-                unpaidCount++;
-                totalUnpaid += bill.getTotalAmount();
-                
-                // Display bill details
-                System.out.println("\n--- Unpaid Bill ---");
-                System.out.println("Bill ID: " + bill.getBillId());
-                System.out.println("Booking ID: " + bill.getBookingId());
-                System.out.println("Amount: $" + bill.getTotalAmount());
-                System.out.println("Generated: " + bill.getGeneratedDate());
-                
-                // Calculate how old the bill is
-                System.out.println("Days since generated: " + 
-                    java.time.temporal.ChronoUnit.DAYS.between(
-                        bill.getGeneratedDate().toLocalDate(), 
-                        java.time.LocalDate.now()
-                    ));
-            }
+            unpaidCount++;
+            totalUnpaid += bill.getTotalAmount();
+            
+            // Display bill details
+            System.out.println("\n--- Unpaid Bill ---");
+            System.out.println("Bill ID: " + bill.getBillId());
+            System.out.println("Booking ID: " + bill.getBookingId());
+            System.out.println("Amount: $" + bill.getTotalAmount());
+            System.out.println("Generated: " + bill.getGeneratedDate());
+            
+            // Calculate how old the bill is
+            System.out.println("Days since generated: " + 
+                java.time.temporal.ChronoUnit.DAYS.between(
+                    bill.getGeneratedDate().toLocalDate(), 
+                    java.time.LocalDate.now()
+                ));
         }
         
         // Display summary
@@ -308,5 +293,26 @@ public class Receptionist extends User {
             System.out.println("Total unpaid bills: " + unpaidCount);
             System.out.println("Total amount due: $" + totalUnpaid);
         }
+    }
+    
+    /**
+     * Gets the room service for external access
+     */
+    public RoomService getRoomService() {
+        return roomService;
+    }
+    
+    /**
+     * Gets the booking service for external access
+     */
+    public BookingService getBookingService() {
+        return bookingService;
+    }
+    
+    /**
+     * Gets the bill service for external access
+     */
+    public BillService getBillService() {
+        return billService;
     }
 }
